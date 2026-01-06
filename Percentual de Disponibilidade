@@ -5,21 +5,22 @@ SELECT
      JOIN hosts_groups hg ON hg.hostid = h.hostid
      JOIN hstgrp grp ON grp.groupid = hg.groupid
      WHERE h.status = 0 
-       AND grp.name LIKE 'Protege/Seguranca/Firewall/%')::numeric
-    -
-    COALESCE((SELECT COUNT(DISTINCT h.hostid)
-     FROM triggers t
-     JOIN functions f ON f.triggerid = t.triggerid
-     JOIN items i ON i.itemid = f.itemid
-     JOIN hosts h ON h.hostid = i.hostid
-     JOIN hosts_groups hg ON hg.hostid = h.hostid
-     JOIN hstgrp grp ON grp.groupid = hg.groupid
-     WHERE t.value = 1 
-       AND t.status = 0 
-       AND t.priority >= 4
-       AND h.status = 0 
-       AND i.status = 0
-       AND grp.name LIKE 'Protege/Seguranca/Firewall/%'), 0)::numeric
+       AND grp.name LIKE 'Protege/Seguranca/Firewall/%'
+       AND h.hostid NOT IN (
+         SELECT DISTINCT h2.hostid
+         FROM triggers t
+         JOIN functions f ON f.triggerid = t.triggerid
+         JOIN items i ON i.itemid = f.itemid
+         JOIN hosts h2 ON h2.hostid = i.hostid
+         JOIN hosts_groups hg2 ON hg2.hostid = h2.hostid
+         JOIN hstgrp grp2 ON grp2.groupid = hg2.groupid
+         WHERE t.value = 1 
+           AND t.status = 0 
+           AND t.priority >= 4
+           AND h2.status = 0 
+           AND i.status = 0
+           AND grp2.name LIKE 'Protege/Seguranca/Firewall/%'
+       ))::numeric
     * 100.0 / 
     NULLIF((SELECT COUNT(DISTINCT h.hostid) 
      FROM hosts h
@@ -27,17 +28,4 @@ SELECT
      JOIN hstgrp grp ON grp.groupid = hg.groupid
      WHERE h.status = 0 
        AND grp.name LIKE 'Protege/Seguranca/Firewall/%')::numeric, 0)
-  , 2) AS "Disponibilidade %";
-```
-**Configuração:**
-- Visualização: **Gauge** ou **Stat**
-- Unit: **Percent (0-100)**
-- Decimals: 2
-- Thresholds:
-  - 0: Red
-  - 95: Orange
-  - 98: Yellow
-  - 99: Green
-
-
-└───────────────────────────────────────────────────────┘
+  , 2) AS "Disponibilidade";
