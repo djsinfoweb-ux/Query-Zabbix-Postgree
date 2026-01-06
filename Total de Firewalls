@@ -1,0 +1,7 @@
+SELECT 
+  COUNT(DISTINCT h.hostid) AS "TOTAL Firewalls"
+FROM hosts h
+JOIN hosts_groups hg ON hg.hostid = h.hostid
+JOIN hstgrp grp ON grp.groupid = hg.groupid
+WHERE h.status = 0
+  AND grp.name LIKE 'Protege/Seguranca/Firewall/%';
