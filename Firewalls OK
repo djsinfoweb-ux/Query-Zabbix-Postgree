@@ -1,0 +1,22 @@
+SELECT 
+  (SELECT COUNT(DISTINCT h.hostid) 
+   FROM hosts h
+   JOIN hosts_groups hg ON hg.hostid = h.hostid
+   JOIN hstgrp grp ON grp.groupid = hg.groupid
+   WHERE h.status = 0 
+     AND grp.name LIKE 'Protege/Seguranca/Firewall/%')
+  -
+  COALESCE((SELECT COUNT(DISTINCT h.hostid)
+   FROM triggers t
+   JOIN functions f ON f.triggerid = t.triggerid
+   JOIN items i ON i.itemid = f.itemid
+   JOIN hosts h ON h.hostid = i.hostid
+   JOIN hosts_groups hg ON hg.hostid = h.hostid
+   JOIN hstgrp grp ON grp.groupid = hg.groupid
+   WHERE t.value = 1 
+     AND t.status = 0 
+     AND t.priority >= 4
+     AND h.status = 0 
+     AND i.status = 0
+     AND grp.name LIKE 'Protege/Seguranca/Firewall/%'), 0)
+  AS "Firewalls OK";
