@@ -1,1 +1,26 @@
 
+SELECT 
+  h.name AS "Firewall",
+  grp.name AS "Grupo",
+  t.description AS "Problema",
+  CASE t.priority
+    WHEN 5 THEN 'Disaster'
+    WHEN 4 THEN 'High'
+    WHEN 3 THEN 'Average'
+    WHEN 2 THEN 'Warning'
+    ELSE 'Info'
+  END AS "Severidade",
+  to_timestamp(t.lastchange) AS "Desde"
+FROM triggers t
+JOIN functions f ON f.triggerid = t.triggerid
+JOIN items i ON i.itemid = f.itemid
+JOIN hosts h ON h.hostid = i.hostid
+JOIN hosts_groups hg ON hg.hostid = h.hostid
+JOIN hstgrp grp ON grp.groupid = hg.groupid
+WHERE t.value = 1
+  AND t.status = 0
+  AND t.priority >= 4
+  AND h.status = 0
+  AND i.status = 0
+  AND grp.name LIKE 'Protege/Seguranca/Firewall/%'
+ORDER BY t.priority DESC, t.lastchange DESC;
